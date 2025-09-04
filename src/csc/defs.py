@@ -1,8 +1,6 @@
-import yaml
-
+from __future__ import annotations
 from pathlib import Path
+import os
 
-# Load sub_data_root from DEFS.yaml (resolve path relative to this file)
-defs_path = Path(__file__).resolve().parent / 'DEFS.yaml'
-with defs_path.open('r') as f:
-    DEFS = yaml.safe_load(f)
+# -------- Defaults (edit these) --------
+data_root: str = '/Volumes/slap_mi/slap_mi/data'
