@@ -25,3 +25,6 @@ htmlcov/
 .venv/
 uv.lock
 EOF
+
+# notebooks for development
+nb_dev/
