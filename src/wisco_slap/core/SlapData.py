@@ -4,6 +4,23 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 import mat73
 import numpy as np
+import xarray as xr
+
+def extract_trace_group(dat: SlapData, group: str = 'dF', trace: str = 'matchFilt', extract_chan: int = 2):
+    n_chunks = len(dat.data['E'])
+    full_data = {}
+    full_data['DMD1'] = []
+    full_data['DMD2'] = []
+    for dmd in [1, 2]:
+        for chunk in range(n_chunks):
+            if dat.data['E'][chunk][dmd-1][group][trace].ndim == 3:
+                full_data[f'DMD{dmd}'].append(dat.data['E'][chunk][dmd-1][group][trace][:, :, extract_chan-1])
+            elif dat.data['E'][chunk][dmd-1][group][trace].ndim == 2:
+                full_data[f'DMD{dmd}'].append(dat.data['E'][chunk][dmd-1][group][trace])
+            else:
+                raise ValueError('Unexpected number of dimensions')
+        full_data[f'DMD{dmd}'] = np.concatenate(full_data[f'DMD{dmd}'], axis=1)
+    return full_data
 
 @dataclass(slots=True)
 class SlapData:
@@ -22,6 +39,11 @@ class SlapData:
     data: dict[str, Any]
     source_path: Optional[str] = None
     selected_var: Optional[str] = None
+
+    @property
+    def fs(self) -> float:
+        # Sampling rate (Hz) from MATLAB params
+        return float(self.data['params']['analyzeHz'])
 
     # --- Primary loader (alternative constructor) ---
     @classmethod
@@ -65,10 +87,18 @@ class SlapData:
         For arrays/scalars, this returns 1.
         """
         return self.data['meanIM'][DMD-1][:, :, channel-1]
-    def all_foots(self, DMD: int) -> np.ndarray:
+    
+    
+    def all_foots(self, DMD: int, chunk: int = 0) -> np.ndarray:
         """
         Return the number of top-level entries inside .data.
         For a 'picked' variable that is itself a dict, this counts its keys.
         For arrays/scalars, this returns 1.
         """
-        return np.max(self.data['E'][0][DMD-1]['footprints'], axis=2)
+        return np.max(self.data['E'][chunk][DMD-1]['footprints'], axis=2)
+    
+    def tracex(self, group: str = 'dF', trace: str = 'matchFilt', extract_chan: int = 2) -> xr.Dataset:
+
+        trcs_concat = extract_trace_group(self, group=group, trace=trace, extract_chan=extract_chan)
+        time = np.arange(trcs_concat['DMD1'].shape[1]) / self.fs
+        
