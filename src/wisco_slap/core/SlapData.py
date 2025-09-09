@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 import mat73
 import numpy as np
+import polars as pl
 import xarray as xr
 
 def extract_trace_group(dat: SlapData, group: str = 'dF', trace: str = 'matchFilt', extract_chan: int = 2):
@@ -89,16 +90,13 @@ class SlapData:
         return self.data['meanIM'][DMD-1][:, :, channel-1]
     
     
-    def all_foots(self, DMD: int, chunk: int = 0) -> np.ndarray:
+    def maxfp(self, DMD: int, chunk: int = 0) -> np.ndarray:
         """
-        Return the number of top-level entries inside .data.
-        For a 'picked' variable that is itself a dict, this counts its keys.
-        For arrays/scalars, this returns 1.
+        Return the maximum footprints for a given DMD and chunk.
+
         """
         return np.max(self.data['E'][chunk][DMD-1]['footprints'], axis=2)
     
-    def tracex(self, group: str = 'dF', trace: str = 'matchFilt', extract_chan: int = 2) -> xr.Dataset:
-
-        trcs_concat = extract_trace_group(self, group=group, trace=trace, extract_chan=extract_chan)
-        time = np.arange(trcs_concat['DMD1'].shape[1]) / self.fs
-        
+    def to_syndf(self) -> pl.DataFrame:
+        ""
+        return None
