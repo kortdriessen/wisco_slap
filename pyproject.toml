@@ -30,14 +30,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = [
   "src/wisco_slap",
-  "src/csc",
 ]
 
 # (Optional but nice for source distributions)
 [tool.hatch.build.targets.sdist]
 include = [
   "src/wisco_slap/**",
-  "src/csc/**",
   "README.md",
   "pyproject.toml",
 ]
